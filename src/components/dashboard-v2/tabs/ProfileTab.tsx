@@ -336,9 +336,9 @@ const ProfileTab = ({ role }: { role: "owner" | "walker" }) => {
             <motion.div initial={{ height: 0, opacity: 0 }} animate={{ height: "auto", opacity: 1 }}
               className="px-4 pb-4 space-y-2 border-t border-border/50 pt-3">
               {[
-                { label: "Carte d'identité", status: walkerProfile?.verified ? "verified" : "pending", icon: "🪪" },
-                { label: "Casier judiciaire B2", status: "pending", icon: "📋" },
-                { label: "Assurance RC Pro", status: "pending", icon: "🛡️" },
+                { label: "Carte d'identité", status: walkerProfile?.verified ? "verified" : "pending", icon: "🪪", type: "cni" },
+                { label: "Casier judiciaire B2", status: "pending", icon: "📋", type: "casier_b2" },
+                { label: "Assurance RC Pro", status: "pending", icon: "🛡️", type: "assurance_rc" },
               ].map(doc => (
                 <div key={doc.label} className="flex items-center justify-between bg-muted/50 rounded-xl px-3 py-3">
                   <div className="flex items-center gap-2">
@@ -351,9 +351,32 @@ const ProfileTab = ({ role }: { role: "owner" | "walker" }) => {
                     }`}>
                       {doc.status === "verified" ? "✓ Vérifié" : "⏳ À envoyer"}
                     </span>
-                    <button className="text-[10px] font-bold text-primary">
+                    <label className="text-[10px] font-bold text-primary cursor-pointer">
                       <Upload className="w-3.5 h-3.5" />
-                    </button>
+                      <input type="file" accept="image/*,application/pdf" className="hidden"
+                        onChange={async (e) => {
+                          const file = e.target.files?.[0];
+                          if (!file || !user) return;
+                          if (file.size > 10 * 1024 * 1024) { toast.error("Max 10MB"); return; }
+                          try {
+                            const ext = file.name.split('.').pop();
+                            const path = `${user.id}/${doc.type}_${Date.now()}.${ext}`;
+                            const { error: uploadErr } = await supabase.storage.from('walker-documents').upload(path, file, { upsert: true });
+                            if (uploadErr) throw uploadErr;
+                            const { data: urlData } = supabase.storage.from('walker-documents').getPublicUrl(path);
+                            await supabase.from('walker_documents').upsert({
+                              walker_id: user.id,
+                              document_type: doc.type,
+                              file_url: urlData.publicUrl,
+                              verification_status: 'pending',
+                              submitted_at: new Date().toISOString(),
+                            }, { onConflict: 'walker_id,document_type' as any });
+                            toast.success(`${doc.label} envoyé ! Vérification sous 24-48h.`);
+                          } catch (err: any) { toast.error(err.message || "Erreur d'envoi"); }
+                          e.target.value = '';
+                        }}
+                      />
+                    </label>
                   </div>
                 </div>
               ))}
