@@ -1,4 +1,4 @@
-import ownerHero from "@/assets/owner-hero.jpg";
+import walkerHeroImg from "@/assets/walker-hero.jpg";
 import avatarWalker from "@/assets/avatar-walker.jpg";
 import dogGolden from "@/assets/dog-golden.jpg";
 import DogCard from "@/components/dashboard-v2/DogCard";
