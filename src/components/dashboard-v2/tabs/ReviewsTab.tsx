@@ -10,7 +10,7 @@ import { useState } from "react";
 
 type ReviewFilter = "all" | "5" | "4" | "3" | "2" | "1";
 
-const ReviewsTab = () => {
+const ReviewsTab = ({ role = "walker" }: { role?: "owner" | "walker" }) => {
   const { user } = useAuth();
   const [filter, setFilter] = useState<ReviewFilter>("all");
 
