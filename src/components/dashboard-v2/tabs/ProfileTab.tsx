@@ -466,11 +466,20 @@ const ProfileTab = ({ role }: { role: "owner" | "walker" }) => {
               </div>
             ))}
             <div className="border-t border-border/50 pt-3 space-y-2">
-              <button className="w-full flex items-center gap-3 py-2 text-left">
+              <button onClick={async () => {
+                if (!user) return;
+                const { error } = await supabase.auth.resetPasswordForEmail(profile?.email || user.email || "", {
+                  redirectTo: window.location.origin + "/auth",
+                });
+                if (error) toast.error("Erreur : " + error.message);
+                else toast.success("Email de réinitialisation envoyé !");
+              }} className="w-full flex items-center gap-3 py-2 text-left">
                 <Lock className="w-4 h-4 text-muted-foreground" />
                 <span className="text-xs font-semibold text-foreground">Changer le mot de passe</span>
               </button>
-              <button className="w-full flex items-center gap-3 py-2 text-left">
+              <button onClick={() => {
+                toast.success("Fonctionnalité bientôt disponible");
+              }} className="w-full flex items-center gap-3 py-2 text-left">
                 <Download className="w-4 h-4 text-muted-foreground" />
                 <span className="text-xs font-semibold text-foreground">Exporter mes données</span>
               </button>
