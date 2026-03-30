@@ -5,8 +5,6 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useNavigate } from "react-router-dom";
 import avatarWalker from "@/assets/avatar-walker.jpg";
-import demoLucas from "@/assets/demo-walker-lucas.jpg";
-import demoSophie from "@/assets/demo-walker-sophie.jpg";
 import StarRating from "../StarRating";
 import { toast } from "sonner";
 import { useState } from "react";
