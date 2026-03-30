@@ -1,4 +1,4 @@
-import { Calendar, Clock, CheckCircle, XCircle, AlertCircle, MapPin, MessageCircle, Phone, Star, RefreshCw, Navigation } from "lucide-react";
+import { Calendar, Clock, CheckCircle, XCircle, AlertCircle, MapPin, MessageCircle, Star, RefreshCw, Navigation } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useAuth } from "@/contexts/AuthContext";
 import { useBookings, useUpdateBooking } from "@/hooks/useNewBookings";
@@ -6,6 +6,10 @@ import { mockBookings } from "@/data/demoData";
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
+import { supabase } from "@/integrations/supabase/client";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Textarea } from "@/components/ui/textarea";
+import StarRating from "../StarRating";
 
 type Filter = "all" | "pending" | "confirmed" | "in_progress" | "completed" | "cancelled";
 
@@ -26,6 +30,14 @@ const BookingsTab = ({ role }: { role: "owner" | "walker" }) => {
   const bookings = isDemo ? mockBookings : realBookings;
   const [filter, setFilter] = useState<Filter>("all");
   const [expandedId, setExpandedId] = useState<string | null>(null);
+
+  // Review dialog state
+  const [reviewDialog, setReviewDialog] = useState<{ open: boolean; bookingId: string; walkerId: string; dogName: string }>({
+    open: false, bookingId: "", walkerId: "", dogName: ""
+  });
+  const [reviewRating, setReviewRating] = useState(5);
+  const [reviewComment, setReviewComment] = useState("");
+  const [submittingReview, setSubmittingReview] = useState(false);
 
   const filters: { key: Filter; label: string; count: number }[] = [
     { key: "all", label: "Toutes", count: bookings.length },
@@ -54,6 +66,32 @@ const BookingsTab = ({ role }: { role: "owner" | "walker" }) => {
       await updateBooking.mutateAsync({ id: bookingId, status: "cancelled" as const, cancelled_by: user!.id });
       toast.success("Réservation annulée");
     } catch { toast.error("Erreur"); }
+  };
+
+  const handleSubmitReview = async () => {
+    if (!user || isDemo) return;
+    setSubmittingReview(true);
+    try {
+      const { error } = await supabase.from("reviews").insert({
+        booking_id: reviewDialog.bookingId,
+        reviewer_id: user.id,
+        reviewed_id: reviewDialog.walkerId,
+        rating: reviewRating,
+        comment: reviewComment || null,
+      });
+      if (error) throw error;
+      toast.success("Avis envoyé ! Merci 🎉");
+      setReviewDialog({ open: false, bookingId: "", walkerId: "", dogName: "" });
+      setReviewRating(5);
+      setReviewComment("");
+    } catch (err: any) {
+      if (err?.code === "23505") {
+        toast.error("Vous avez déjà laissé un avis pour cette réservation");
+      } else {
+        toast.error("Erreur lors de l'envoi de l'avis");
+      }
+    }
+    setSubmittingReview(false);
   };
 
   // Aggregate stats
@@ -127,7 +165,6 @@ const BookingsTab = ({ role }: { role: "owner" | "walker" }) => {
                 <button className="w-full p-4 text-left" onClick={() => setExpandedId(isExpanded ? null : b.id)}>
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-2">
-                      {/* Dog photo or icon */}
                       <div className="w-10 h-10 rounded-xl gradient-primary flex items-center justify-center shrink-0 overflow-hidden">
                         {(b.dogs?.photo_url) ? (
                           <img src={b.dogs.photo_url} alt="" className="w-full h-full object-cover" />
@@ -166,7 +203,6 @@ const BookingsTab = ({ role }: { role: "owner" | "walker" }) => {
                           <p className="text-xs text-muted-foreground bg-muted/50 rounded-xl px-3 py-2">📝 {b.notes}</p>
                         )}
 
-                        {/* Walker/Owner info */}
                         {role === "owner" && b.walker_id && (
                           <div className="flex items-center gap-2 bg-primary/5 rounded-xl px-3 py-2">
                             <span className="text-xs text-foreground font-semibold">🏃 Promeneur assigné</span>
@@ -203,7 +239,14 @@ const BookingsTab = ({ role }: { role: "owner" | "walker" }) => {
                             </>
                           )}
                           {b.status === "completed" && role === "owner" && (
-                            <button className="flex-1 py-2 rounded-xl bg-amber-500/10 text-amber-600 text-xs font-bold flex items-center justify-center gap-1">
+                            <button
+                              onClick={() => setReviewDialog({
+                                open: true,
+                                bookingId: b.id,
+                                walkerId: b.walker_id || "",
+                                dogName: b.dogs?.name || "Chien",
+                              })}
+                              className="flex-1 py-2 rounded-xl bg-amber-500/10 text-amber-600 text-xs font-bold flex items-center justify-center gap-1">
                               <Star className="w-3 h-3" /> Laisser un avis
                             </button>
                           )}
@@ -228,6 +271,49 @@ const BookingsTab = ({ role }: { role: "owner" | "walker" }) => {
           })}
         </div>
       )}
+
+      {/* Review Dialog */}
+      <Dialog open={reviewDialog.open} onOpenChange={(open) => {
+        if (!open) { setReviewDialog({ open: false, bookingId: "", walkerId: "", dogName: "" }); setReviewRating(5); setReviewComment(""); }
+      }}>
+        <DialogContent className="max-w-sm rounded-2xl">
+          <DialogHeader>
+            <DialogTitle className="text-center">
+              ⭐ Évaluer la promenade de {reviewDialog.dogName}
+            </DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4 py-2">
+            <div className="text-center">
+              <p className="text-xs text-muted-foreground mb-2">Quelle note donnez-vous ?</p>
+              <div className="flex justify-center gap-2">
+                {[1, 2, 3, 4, 5].map(n => (
+                  <button key={n} onClick={() => setReviewRating(n)}
+                    className="transition-transform hover:scale-110">
+                    <Star className={`w-8 h-8 ${n <= reviewRating ? "text-amber-400 fill-amber-400" : "text-muted-foreground/20"}`} />
+                  </button>
+                ))}
+              </div>
+              <p className="text-sm font-bold text-foreground mt-1">
+                {reviewRating === 5 ? "Excellent !" : reviewRating === 4 ? "Très bien" : reviewRating === 3 ? "Correct" : reviewRating === 2 ? "Décevant" : "Mauvais"}
+              </p>
+            </div>
+            <Textarea
+              value={reviewComment}
+              onChange={e => setReviewComment(e.target.value)}
+              placeholder="Décrivez votre expérience (optionnel)..."
+              className="min-h-[80px] text-sm"
+              maxLength={500}
+            />
+            <p className="text-[9px] text-muted-foreground text-right">{reviewComment.length}/500</p>
+            <button
+              onClick={handleSubmitReview}
+              disabled={submittingReview}
+              className="w-full py-3 rounded-xl gradient-primary text-white font-bold text-sm disabled:opacity-50">
+              {submittingReview ? "Envoi..." : "Envoyer l'avis"}
+            </button>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };

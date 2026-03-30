@@ -9,6 +9,14 @@ import { supabase } from "@/integrations/supabase/client";
 import { useQueryClient } from "@tanstack/react-query";
 import { useNavigate } from "react-router-dom";
 import dogGolden from "@/assets/dog-golden.jpg";
+import { Switch } from "@/components/ui/switch";
+
+const SIZE_OPTIONS = [
+  { value: "small", label: "Petit", desc: "< 10kg" },
+  { value: "medium", label: "Moyen", desc: "10-25kg" },
+  { value: "large", label: "Grand", desc: "25-45kg" },
+  { value: "giant", label: "Géant", desc: "> 45kg" },
+] as const;
 
 const DogsTab = () => {
   const { user } = useAuth();
@@ -24,13 +32,22 @@ const DogsTab = () => {
   const [breed, setBreed] = useState("");
   const [age, setAge] = useState("");
   const [weight, setWeight] = useState("");
+  const [size, setSize] = useState<string>("medium");
   const [temperament, setTemperament] = useState("");
   const [specialNeeds, setSpecialNeeds] = useState("");
+  const [vaccinated, setVaccinated] = useState(true);
+  const [neutered, setNeutered] = useState(false);
   const [uploadingDogId, setUploadingDogId] = useState<string | null>(null);
   const [deletingDogId, setDeletingDogId] = useState<string | null>(null);
   const [expandedDogId, setExpandedDogId] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [selectedDogId, setSelectedDogId] = useState<string | null>(null);
+
+  const resetForm = () => {
+    setName(""); setBreed(""); setAge(""); setWeight(""); setSize("medium");
+    setTemperament(""); setSpecialNeeds(""); setVaccinated(true); setNeutered(false);
+    setShowForm(false);
+  };
 
   const handleAdd = async () => {
     if (!user) return toast.error("Connectez-vous");
@@ -41,11 +58,14 @@ const DogsTab = () => {
         breed: breed || null,
         age: age ? Number(age) : null,
         weight: weight ? Number(weight) : null,
+        size: size as any,
         temperament: temperament || null,
         special_needs: specialNeeds || null,
+        vaccinations_up_to_date: vaccinated,
+        is_neutered: neutered,
       });
       toast.success(`${name} ajouté !`);
-      setName(""); setBreed(""); setAge(""); setWeight(""); setTemperament(""); setSpecialNeeds(""); setShowForm(false);
+      resetForm();
     } catch { toast.error("Erreur lors de l'ajout"); }
   };
 
@@ -96,7 +116,7 @@ const DogsTab = () => {
       <AnimatePresence>
         {showForm && (
           <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: "auto" }} exit={{ opacity: 0, height: 0 }}
-            className="bg-card rounded-2xl shadow-card p-4 space-y-2 overflow-hidden">
+            className="bg-card rounded-2xl shadow-card p-4 space-y-3 overflow-hidden">
             <input value={name} onChange={e => setName(e.target.value)} placeholder="Nom du chien *"
               className="w-full px-3 py-2.5 rounded-xl bg-muted text-sm focus:outline-none focus:ring-2 focus:ring-primary/30" />
             <input value={breed} onChange={e => setBreed(e.target.value)} placeholder="Race (ex: Labrador)"
@@ -107,12 +127,44 @@ const DogsTab = () => {
               <input value={weight} onChange={e => setWeight(e.target.value)} placeholder="Poids (kg)" type="number" min="0"
                 className="w-full px-3 py-2.5 rounded-xl bg-muted text-sm focus:outline-none focus:ring-2 focus:ring-primary/30" />
             </div>
-            <input value={temperament} onChange={e => setTemperament(e.target.value)} placeholder="Tempérament (calme, joueur...)"
+
+            {/* Size selector */}
+            <div className="space-y-1.5">
+              <label className="text-xs font-bold text-muted-foreground">Taille</label>
+              <div className="grid grid-cols-4 gap-1.5">
+                {SIZE_OPTIONS.map(opt => (
+                  <button key={opt.value} type="button" onClick={() => setSize(opt.value)}
+                    className={`py-2 rounded-xl text-center transition-all ${
+                      size === opt.value
+                        ? "gradient-primary text-white shadow-card"
+                        : "bg-muted text-muted-foreground hover:bg-muted/80"
+                    }`}>
+                    <span className="text-xs font-bold block">{opt.label}</span>
+                    <span className="text-[8px] opacity-70">{opt.desc}</span>
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            <input value={temperament} onChange={e => setTemperament(e.target.value)} placeholder="Tempérament (calme, joueur, réactif...)"
               className="w-full px-3 py-2.5 rounded-xl bg-muted text-sm focus:outline-none focus:ring-2 focus:ring-primary/30" />
             <input value={specialNeeds} onChange={e => setSpecialNeeds(e.target.value)} placeholder="Besoins médicaux / allergies"
               className="w-full px-3 py-2.5 rounded-xl bg-muted text-sm focus:outline-none focus:ring-2 focus:ring-primary/30" />
+
+            {/* Toggles */}
+            <div className="flex gap-4">
+              <div className="flex items-center gap-2">
+                <Switch checked={vaccinated} onCheckedChange={setVaccinated} />
+                <label className="text-xs text-foreground font-semibold">Vacciné</label>
+              </div>
+              <div className="flex items-center gap-2">
+                <Switch checked={neutered} onCheckedChange={setNeutered} />
+                <label className="text-xs text-foreground font-semibold">Stérilisé</label>
+              </div>
+            </div>
+
             <div className="flex gap-2 pt-1">
-              <button onClick={() => setShowForm(false)} className="flex-1 py-2.5 rounded-xl border border-border text-sm font-bold">Annuler</button>
+              <button onClick={resetForm} className="flex-1 py-2.5 rounded-xl border border-border text-sm font-bold">Annuler</button>
               <button onClick={handleAdd} disabled={addDog.isPending}
                 className="flex-1 py-2.5 rounded-xl gradient-primary text-white text-sm font-bold disabled:opacity-50">
                 {addDog.isPending ? "Ajout..." : "✓ Ajouter"}
@@ -149,6 +201,7 @@ const DogsTab = () => {
         <div className="space-y-3">
           {dogs.map((dog: any, i: number) => {
             const isExpanded = expandedDogId === dog.id;
+            const sizeLabel = SIZE_OPTIONS.find(s => s.value === dog.size)?.label || dog.size;
             return (
               <motion.div key={dog.id} initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: i * 0.06 }}
@@ -168,13 +221,14 @@ const DogsTab = () => {
                     <div>
                       <div className="flex items-center justify-between">
                         <h3 className="font-bold text-foreground">{dog.name}</h3>
-                        <Heart className="w-3.5 h-3.5 text-[hsl(var(--heart))] fill-[hsl(var(--heart))]/20" />
+                        <Heart className="w-3.5 h-3.5 text-destructive/40" />
                       </div>
                       <p className="text-[11px] text-muted-foreground">{dog.breed || "Race inconnue"}</p>
                     </div>
-                    <div className="flex items-center gap-2 mt-2 text-[10px] text-muted-foreground flex-wrap">
+                    <div className="flex items-center gap-1.5 mt-2 text-[10px] text-muted-foreground flex-wrap">
                       {dog.age && <span className="flex items-center gap-0.5 bg-muted rounded-full px-2 py-0.5"><Ruler className="w-3 h-3" /> {dog.age} ans</span>}
                       {dog.weight && <span className="flex items-center gap-0.5 bg-muted rounded-full px-2 py-0.5"><Weight className="w-3 h-3" /> {dog.weight} kg</span>}
+                      {dog.size && <span className="bg-muted rounded-full px-2 py-0.5">{sizeLabel}</span>}
                       {dog.vaccinations_up_to_date && (
                         <span className="flex items-center gap-0.5 bg-primary/10 text-primary rounded-full px-2 py-0.5"><Syringe className="w-3 h-3" /> Vacciné</span>
                       )}
@@ -203,6 +257,15 @@ const DogsTab = () => {
                             </div>
                           </div>
                         )}
+                        {/* Status badges */}
+                        <div className="flex gap-2 flex-wrap">
+                          <span className={`text-[10px] font-bold px-2.5 py-1 rounded-full ${dog.is_neutered ? "bg-primary/10 text-primary" : "bg-muted text-muted-foreground"}`}>
+                            {dog.is_neutered ? "✓ Stérilisé" : "Non stérilisé"}
+                          </span>
+                          <span className={`text-[10px] font-bold px-2.5 py-1 rounded-full ${dog.vaccinations_up_to_date ? "bg-primary/10 text-primary" : "bg-amber-500/10 text-amber-600"}`}>
+                            {dog.vaccinations_up_to_date ? "✓ Vaccins à jour" : "⚠ Vaccins à vérifier"}
+                          </span>
+                        </div>
                         <div className="flex gap-2">
                           {!isDemo && (
                             <button onClick={(e) => { e.stopPropagation(); setSelectedDogId(dog.id); fileInputRef.current?.click(); }}
