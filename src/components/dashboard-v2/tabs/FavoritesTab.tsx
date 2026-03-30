@@ -5,15 +5,13 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useNavigate } from "react-router-dom";
 import avatarWalker from "@/assets/avatar-walker.jpg";
-import demoLucas from "@/assets/demo-walker-lucas.jpg";
-import demoSophie from "@/assets/demo-walker-sophie.jpg";
 import StarRating from "../StarRating";
 import { toast } from "sonner";
 import { useState } from "react";
 
 const DEMO_FAVORITES = [
-  { id: "1", name: "Lucas M.", rating: 4.9, reviews: 89, avatar: demoLucas, city: "Paris", price: 15, verified: true, services: ["Promenade", "Garde"], experience: 3 },
-  { id: "2", name: "Sophie B.", rating: 4.7, reviews: 34, avatar: demoSophie, city: "Lyon", price: 12, verified: true, services: ["Promenade", "Visite"], experience: 2 },
+  { id: "1", name: "Lucas M.", rating: 4.9, reviews: 89, avatar: avatarWalker, city: "Paris", price: 15, verified: true, services: ["Promenade", "Garde"], experience: 3 },
+  { id: "2", name: "Sophie B.", rating: 4.7, reviews: 34, avatar: avatarWalker, city: "Lyon", price: 12, verified: true, services: ["Promenade", "Visite"], experience: 2 },
   { id: "3", name: "Emma P.", rating: 4.5, reviews: 21, avatar: null, city: "Marseille", price: 18, verified: false, services: ["Promenade"], experience: 1 },
 ];
 
