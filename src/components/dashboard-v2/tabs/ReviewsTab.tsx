@@ -1,4 +1,4 @@
-import { Star, MessageSquare, ThumbsUp, TrendingUp, Award } from "lucide-react";
+import { Star, MessageSquare, ThumbsUp, TrendingUp, Award, PenLine } from "lucide-react";
 import { motion } from "framer-motion";
 import { useAuth } from "@/contexts/AuthContext";
 import { useQuery } from "@tanstack/react-query";
@@ -14,31 +14,64 @@ const ReviewsTab = ({ role = "walker" }: { role?: "owner" | "walker" }) => {
   const { user } = useAuth();
   const [filter, setFilter] = useState<ReviewFilter>("all");
 
+  // Walker: reviews received (reviewed_id = me)
+  // Owner: reviews I gave (reviewer_id = me)
   const { data: reviews = [] } = useQuery({
-    queryKey: ["my-reviews", user?.id],
+    queryKey: ["my-reviews", user?.id, role],
     queryFn: async () => {
       if (!user) return [];
-      const { data } = await supabase
-        .from("reviews")
-        .select("*")
-        .eq("reviewed_id", user.id)
-        .order("created_at", { ascending: false });
 
-      if (!data || data.length === 0) return [];
+      if (role === "owner") {
+        // Owner sees reviews they GAVE
+        const { data } = await supabase
+          .from("reviews")
+          .select("*, booking:booking_id(dogs(name), walker_id)")
+          .eq("reviewer_id", user.id)
+          .order("created_at", { ascending: false });
 
-      const reviewerIds = [...new Set(data.map(r => r.reviewer_id))];
-      const { data: profiles } = await supabase
-        .from("profiles")
-        .select("id, first_name, avatar_url")
-        .in("id", reviewerIds);
-      const profileMap = new Map(profiles?.map(p => [p.id, p]) || []);
+        if (!data || data.length === 0) return [];
 
-      return data.map((r: any) => ({
-        id: r.id, rating: r.rating, comment: r.comment || "",
-        reviewerName: profileMap.get(r.reviewer_id)?.first_name || "Client",
-        reviewerAvatar: profileMap.get(r.reviewer_id)?.avatar_url,
-        date: new Date(r.created_at).toLocaleDateString("fr-FR"),
-      }));
+        // Get walker profiles for names
+        const walkerIds = [...new Set(data.map(r => r.reviewed_id))];
+        const { data: profiles } = await supabase
+          .from("profiles")
+          .select("id, first_name, avatar_url")
+          .in("id", walkerIds);
+        const profileMap = new Map(profiles?.map(p => [p.id, p]) || []);
+
+        return data.map((r: any) => ({
+          id: r.id, rating: r.rating, comment: r.comment || "",
+          reviewerName: profileMap.get(r.reviewed_id)?.first_name || "Promeneur",
+          reviewerAvatar: profileMap.get(r.reviewed_id)?.avatar_url,
+          dogName: r.booking?.dogs?.name || "",
+          date: new Date(r.created_at).toLocaleDateString("fr-FR"),
+          isGiven: true,
+        }));
+      } else {
+        // Walker sees reviews received
+        const { data } = await supabase
+          .from("reviews")
+          .select("*")
+          .eq("reviewed_id", user.id)
+          .order("created_at", { ascending: false });
+
+        if (!data || data.length === 0) return [];
+
+        const reviewerIds = [...new Set(data.map(r => r.reviewer_id))];
+        const { data: profiles } = await supabase
+          .from("profiles")
+          .select("id, first_name, avatar_url")
+          .in("id", reviewerIds);
+        const profileMap = new Map(profiles?.map(p => [p.id, p]) || []);
+
+        return data.map((r: any) => ({
+          id: r.id, rating: r.rating, comment: r.comment || "",
+          reviewerName: profileMap.get(r.reviewer_id)?.first_name || "Client",
+          reviewerAvatar: profileMap.get(r.reviewer_id)?.avatar_url,
+          date: new Date(r.created_at).toLocaleDateString("fr-FR"),
+          isGiven: false,
+        }));
+      }
     },
     enabled: !!user,
   });
@@ -55,14 +88,15 @@ const ReviewsTab = ({ role = "walker" }: { role?: "owner" | "walker" }) => {
     pct: list.length > 0 ? (list.filter((r: any) => r.rating === star).length / list.length) * 100 : 0,
   }));
 
-  // Satisfaction score
   const satisfactionPct = list.length > 0 ? Math.round((list.filter((r: any) => r.rating >= 4).length / list.length) * 100) : 0;
 
   return (
     <div className="px-4 py-6 space-y-4 pb-24">
       <div className="flex items-center gap-2">
-        <Star className="w-5 h-5 text-[hsl(var(--star))]" />
-        <h2 className="text-lg font-black text-foreground">{role === "owner" ? "Mes Avis" : "Avis Clients"}</h2>
+        {role === "owner" ? <PenLine className="w-5 h-5 text-primary" /> : <Star className="w-5 h-5 text-[hsl(var(--star))]" />}
+        <h2 className="text-lg font-black text-foreground">
+          {role === "owner" ? "Mes Avis Donnés" : "Avis Clients"}
+        </h2>
         <span className="text-xs font-bold text-muted-foreground bg-muted px-2 py-0.5 rounded-full">{list.length}</span>
       </div>
 
@@ -141,7 +175,12 @@ const ReviewsTab = ({ role = "walker" }: { role?: "owner" | "walker" }) => {
                 className="w-10 h-10 rounded-full object-cover ring-2 ring-primary/10" loading="lazy" />
               <div className="flex-1">
                 <div className="flex items-center justify-between">
-                  <span className="font-bold text-sm text-foreground">{r.reviewerName}</span>
+                  <div>
+                    <span className="font-bold text-sm text-foreground">{r.reviewerName}</span>
+                    {r.dogName && (
+                      <span className="text-[10px] text-muted-foreground ml-1.5">pour 🐕 {r.dogName}</span>
+                    )}
+                  </div>
                   <span className="text-[9px] text-muted-foreground">{r.date}</span>
                 </div>
                 <StarRating rating={r.rating} />

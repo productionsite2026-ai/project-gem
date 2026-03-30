@@ -1,4 +1,4 @@
-import ownerHero from "@/assets/owner-hero.jpg";
+import walkerHeroImg from "@/assets/walker-hero.jpg";
 import avatarWalker from "@/assets/avatar-walker.jpg";
 import dogGolden from "@/assets/dog-golden.jpg";
 import DogCard from "@/components/dashboard-v2/DogCard";
@@ -127,7 +127,7 @@ const OwnerDashboard = () => {
         <DashboardHeader title="🐾 Espace Propriétaire" notificationCount={bookings.filter((b: any) => b.status === "pending").length} />
         <div className="w-full h-56 bg-gradient-to-br from-[hsl(200,80%,35%)] to-[hsl(220,60%,40%)] flex items-end">
           <div className="w-full h-full relative overflow-hidden">
-            <img src={ownerHero} alt="Mes chiens" className="w-full h-full object-cover opacity-30" width={800} height={512} />
+            <img src={walkerHeroImg} alt="Mes chiens" className="w-full h-full object-cover opacity-30" width={800} height={512} />
           </div>
         </div>
         <div className="absolute bottom-0 left-0 right-0 translate-y-1/2 px-4">
