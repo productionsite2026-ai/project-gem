@@ -1,4 +1,4 @@
-import { Home, Heart, MessageCircle, User, Briefcase } from "lucide-react";
+import { Home, Heart, MessageCircle, User, Briefcase, Euro } from "lucide-react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { motion } from "framer-motion";
 import { useState } from "react";
@@ -35,6 +35,7 @@ const BottomNav = ({ role, activeMission }: BottomNavProps) => {
   const walkerItems = [
     { icon: Home, label: "Accueil", path: basePath },
     { icon: Briefcase, label: "Missions", path: `${basePath}?tab=missions` },
+    { icon: Euro, label: "Revenus", path: `${basePath}?tab=gains` },
     { icon: MessageCircle, label: "Messages", path: `${basePath}?tab=messages`, badge: totalUnreadCount },
     { icon: User, label: "Profil", path: `${basePath}?tab=profil` },
   ];
@@ -47,17 +48,22 @@ const BottomNav = ({ role, activeMission }: BottomNavProps) => {
     return false;
   };
 
+  // For walker: split items around the GO button (2 left, GO, 3 right)
+  // For owner: split items around the GO button (2 left, GO, 2 right)
+  const leftItems = role === "walker" ? items.slice(0, 2) : items.slice(0, 2);
+  const rightItems = role === "walker" ? items.slice(2) : items.slice(2);
+
   return (
     <>
       <nav className="fixed bottom-0 left-0 right-0 bg-card/95 backdrop-blur-lg border-t border-border z-50 pb-[env(safe-area-inset-bottom)]">
         <div className="max-w-lg mx-auto flex items-center justify-around relative h-16">
-          {items.slice(0, 2).map((item) => {
+          {leftItems.map((item) => {
             const active = isActive(item.path);
             return (
               <button
                 key={item.label}
                 onClick={() => navigate(item.path)}
-                className={`flex flex-col items-center gap-0.5 py-3 px-4 transition-all duration-200 relative ${
+                className={`flex flex-col items-center gap-0.5 py-3 px-3 transition-all duration-200 relative ${
                   active ? "text-primary" : "text-muted-foreground hover:text-foreground"
                 }`}
               >
@@ -84,16 +90,16 @@ const BottomNav = ({ role, activeMission }: BottomNavProps) => {
           >
             <span className="text-lg font-black tracking-tight">GO</span>
           </motion.button>
-          <div className="w-16" />
+          <div className="w-14" />
 
-          {items.slice(2).map((item) => {
+          {rightItems.map((item) => {
             const active = isActive(item.path);
             const badge = (item as any).badge;
             return (
               <button
                 key={item.label}
                 onClick={() => navigate(item.path)}
-                className={`flex flex-col items-center gap-0.5 py-3 px-4 transition-all duration-200 relative ${
+                className={`flex flex-col items-center gap-0.5 py-3 px-3 transition-all duration-200 relative ${
                   active ? "text-primary" : "text-muted-foreground hover:text-foreground"
                 }`}
               >

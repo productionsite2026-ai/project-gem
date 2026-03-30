@@ -10,7 +10,7 @@ import { useState } from "react";
 
 type ReviewFilter = "all" | "5" | "4" | "3" | "2" | "1";
 
-const ReviewsTab = () => {
+const ReviewsTab = ({ role = "walker" }: { role?: "owner" | "walker" }) => {
   const { user } = useAuth();
   const [filter, setFilter] = useState<ReviewFilter>("all");
 
@@ -62,7 +62,7 @@ const ReviewsTab = () => {
     <div className="px-4 py-6 space-y-4 pb-24">
       <div className="flex items-center gap-2">
         <Star className="w-5 h-5 text-[hsl(var(--star))]" />
-        <h2 className="text-lg font-black text-foreground">Avis Clients</h2>
+        <h2 className="text-lg font-black text-foreground">{role === "owner" ? "Mes Avis" : "Avis Clients"}</h2>
         <span className="text-xs font-bold text-muted-foreground bg-muted px-2 py-0.5 rounded-full">{list.length}</span>
       </div>
 
