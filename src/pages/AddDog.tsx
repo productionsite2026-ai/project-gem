@@ -169,6 +169,31 @@ const AddDog = () => {
                 </motion.div>
 
                 <motion.div variants={itemVariants}>
+                  <Label htmlFor="behavior">Comportement avec autres chiens</Label>
+                  <select
+                    id="behavior"
+                    name="behavior"
+                    className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+                  >
+                    <option value="">Sélectionner...</option>
+                    <option value="friendly">Sociable — adore les autres chiens</option>
+                    <option value="selective">Sélectif — s'entend avec certains</option>
+                    <option value="reactive">Réactif — nécessite une gestion</option>
+                    <option value="fearful">Craintif — préfère les éviter</option>
+                    <option value="aggressive">Agressif — ne pas mettre en contact</option>
+                  </select>
+                </motion.div>
+
+                <motion.div variants={itemVariants} className="flex items-center justify-between p-4 rounded-xl border">
+                  <div>
+                    <Label htmlFor="vaccinated" className="font-medium">Vaccinations à jour</Label>
+                    <p className="text-xs text-muted-foreground">Carnet de vaccination vérifié</p>
+                  </div>
+                  <input type="checkbox" id="vaccinated" name="vaccinated" defaultChecked
+                    className="h-5 w-5 rounded border-input text-primary focus:ring-primary" />
+                </motion.div>
+
+                <motion.div variants={itemVariants}>
                   <Label htmlFor="medical" className="flex items-center gap-2">
                     <Info className="h-4 w-4 text-muted-foreground" />
                     Notes médicales (optionnel)

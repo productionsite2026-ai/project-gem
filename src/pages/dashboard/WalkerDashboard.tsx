@@ -159,12 +159,7 @@ const WalkerDashboard = () => {
         <UpcomingBookings bookings={upcomingBookings} />
         <BadgeGrid />
 
-        <motion.button
-          whileTap={{ scale: 0.97 }}
-          className="w-full py-4 rounded-2xl gradient-primary text-white font-black text-lg shadow-glow-primary hover:opacity-90 transition-opacity"
-        >
-          🚀 Démarrer une Mission
-        </motion.button>
+      {/* Button removed — mission start is handled via the GO button in BottomNav */}
       </div>
 
       <BottomNav role="walker" activeMission={activeMissionData} />

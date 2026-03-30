@@ -1,4 +1,4 @@
-import { Calendar, MapPin, Clock, Star } from "lucide-react";
+import { Calendar, MapPin, Clock, Star, Euro, Search } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 import { motion } from "framer-motion";
 import { useNavigate } from "react-router-dom";
@@ -14,16 +14,16 @@ const QuickActions = ({ role }: { role: "owner" | "walker" }) => {
   const navigate = useNavigate();
 
   const ownerActions: QuickAction[] = [
-    { icon: Calendar, label: "Réserver", gradient: "gradient-primary", path: "/find-walkers" },
-    { icon: MapPin, label: "Tracking", gradient: "gradient-accent", path: "/dashboard?tab=reservations" },
-    { icon: Clock, label: "Historique", gradient: "gradient-passion", path: "/dashboard?tab=reservations" },
+    { icon: Search, label: "Réserver", gradient: "gradient-primary", path: "/find-walkers" },
+    { icon: Calendar, label: "Réservations", gradient: "gradient-accent", path: "/dashboard?tab=reservations" },
+    { icon: MapPin, label: "Mes Chiens", gradient: "gradient-passion", path: "/dashboard?tab=chiens" },
     { icon: Star, label: "Favoris", gradient: "gradient-community", path: "/dashboard?tab=favoris" },
   ];
 
   const walkerActions: QuickAction[] = [
     { icon: Calendar, label: "Planning", gradient: "gradient-primary", path: "/walker/dashboard?tab=missions" },
     { icon: MapPin, label: "Disponibilité", gradient: "gradient-accent", path: "/walker/dashboard?tab=disponibilite" },
-    { icon: Clock, label: "Revenus", gradient: "gradient-passion", path: "/walker/dashboard?tab=gains" },
+    { icon: Euro, label: "Revenus", gradient: "gradient-passion", path: "/walker/dashboard?tab=gains" },
     { icon: Star, label: "Avis", gradient: "gradient-community", path: "/walker/dashboard?tab=avis" },
   ];
 
