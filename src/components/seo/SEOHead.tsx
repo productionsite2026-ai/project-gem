@@ -87,7 +87,7 @@ export const SEOHead = ({
       <meta property="twitter:image" content={image} />
       
       {/* Additional Meta Tags */}
-      <meta name="theme-color" content="#22c55e" />
+      <meta name="theme-color" content="#00D084" />
       <meta name="author" content="DogWalking" />
       <meta name="keywords" content="promenade chien, dog walking, garde chien, pet sitting, promeneur chien, garde animaux, visite domicile animal, France" />
       
