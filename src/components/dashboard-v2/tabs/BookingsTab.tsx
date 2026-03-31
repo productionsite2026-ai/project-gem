@@ -56,6 +56,23 @@ const BookingsTab = ({ role }: { role: "owner" | "walker" }) => {
         ? { id: bookingId, walker_confirmed: true, status: "confirmed" as const }
         : { id: bookingId, owner_confirmed: true };
       await updateBooking.mutateAsync(updates);
+
+      // Notify the other party
+      const booking = bookings.find((b: any) => b.id === bookingId) as any;
+      if (booking) {
+        const targetId = role === "walker" ? booking.owner_id : booking.walker_id;
+        const senderName = role === "walker" ? "Le promeneur" : "Le propriétaire";
+        if (targetId) {
+          await supabase.from("notifications").insert({
+            user_id: targetId,
+            title: "✅ Réservation confirmée",
+            message: `${senderName} a confirmé la réservation du ${new Date(booking.scheduled_date).toLocaleDateString("fr-FR")} à ${booking.scheduled_time}`,
+            type: "booking",
+            link: role === "walker" ? "/dashboard?tab=reservations" : "/walker/dashboard?tab=missions",
+          });
+        }
+      }
+
       toast.success("Réservation confirmée !");
     } catch { toast.error("Erreur"); }
   };
@@ -64,6 +81,22 @@ const BookingsTab = ({ role }: { role: "owner" | "walker" }) => {
     if (isDemo) return;
     try {
       await updateBooking.mutateAsync({ id: bookingId, status: "cancelled" as const, cancelled_by: user!.id });
+
+      // Notify the other party
+      const booking = bookings.find((b: any) => b.id === bookingId) as any;
+      if (booking) {
+        const targetId = role === "walker" ? booking.owner_id : booking.walker_id;
+        if (targetId) {
+          await supabase.from("notifications").insert({
+            user_id: targetId,
+            title: "❌ Réservation annulée",
+            message: `La réservation du ${new Date(booking.scheduled_date).toLocaleDateString("fr-FR")} a été annulée`,
+            type: "booking",
+            link: role === "walker" ? "/dashboard?tab=reservations" : "/walker/dashboard?tab=missions",
+          });
+        }
+      }
+
       toast.success("Réservation annulée");
     } catch { toast.error("Erreur"); }
   };

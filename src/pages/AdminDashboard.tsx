@@ -8,8 +8,9 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { 
   Users, Dog, Calendar, Euro, Shield, Scale, AlertTriangle,
-  BarChart3, Activity, CheckCircle, XCircle, Clock
+  BarChart3, Activity, CheckCircle, XCircle, Clock, FileCheck, FileX, Eye
 } from 'lucide-react';
+import { Input } from "@/components/ui/input";
 import { supabase } from "@/integrations/supabase/client";
 import { useNavigate } from "react-router-dom";
 import { toast } from "@/hooks/use-toast";
@@ -35,6 +36,7 @@ const AdminDashboard = () => {
   const [recentUsers, setRecentUsers] = useState<any[]>([]);
   const [disputes, setDisputes] = useState<any[]>([]);
   const [incidents, setIncidents] = useState<any[]>([]);
+  const [pendingDocuments, setPendingDocuments] = useState<any[]>([]);
 
   useEffect(() => {
     checkAuth();
@@ -127,6 +129,21 @@ const AdminDashboard = () => {
         .order('reported_at', { ascending: false });
       setIncidents(incidentsData || []);
 
+      // Fetch pending walker documents with profile info
+      const { data: docsData } = await supabase
+        .from('walker_documents')
+        .select('*')
+        .order('submitted_at', { ascending: false });
+      
+      if (docsData && docsData.length > 0) {
+        const walkerIds = [...new Set(docsData.map(d => d.walker_id))];
+        const { data: docProfiles } = await supabase.from('profiles').select('id, first_name, last_name, email').in('id', walkerIds);
+        const profileMap = new Map(docProfiles?.map(p => [p.id, p]) || []);
+        setPendingDocuments(docsData.map(d => ({ ...d, profile: profileMap.get(d.walker_id) || null })));
+      } else {
+        setPendingDocuments([]);
+      }
+
       setStats({
         totalUsers: profilesData?.length || 0,
         totalOwners: owners,
@@ -192,6 +209,36 @@ const AdminDashboard = () => {
         description: "L'incident a été marqué comme résolu"
       });
 
+      fetchAdminStats();
+    } catch (error: any) {
+      toast({ title: "Erreur", description: error.message, variant: "destructive" });
+    }
+  };
+
+  const handleVerifyDocument = async (docId: string, status: 'approved' | 'rejected', reason?: string) => {
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) return;
+      const { error } = await supabase.from('walker_documents').update({
+        verification_status: status,
+        verified_by: session.user.id,
+        verified_at: new Date().toISOString(),
+        rejection_reason: status === 'rejected' ? (reason || 'Document non conforme') : null,
+      }).eq('id', docId);
+      if (error) throw error;
+      const doc = pendingDocuments.find((d: any) => d.id === docId);
+      if (doc) {
+        await supabase.from('notifications').insert({
+          user_id: doc.walker_id,
+          title: status === 'approved' ? '✅ Document validé' : '❌ Document refusé',
+          message: status === 'approved'
+            ? `Votre ${doc.document_type} a été vérifié et approuvé.`
+            : `Votre ${doc.document_type} a été refusé : ${reason || 'Non conforme'}. Veuillez le renvoyer.`,
+          type: 'verification',
+          link: '/walker/dashboard?tab=profil',
+        });
+      }
+      toast({ title: status === 'approved' ? 'Document approuvé' : 'Document refusé', description: 'Le promeneur a été notifié' });
       fetchAdminStats();
     } catch (error: any) {
       toast({ title: "Erreur", description: error.message, variant: "destructive" });
@@ -296,8 +343,16 @@ const AdminDashboard = () => {
 
         {/* Tabs */}
         <Tabs defaultValue="bookings" className="space-y-6">
-          <TabsList className="grid w-full grid-cols-4">
+          <TabsList className="grid w-full grid-cols-5">
             <TabsTrigger value="bookings">Réservations</TabsTrigger>
+            <TabsTrigger value="documents" className="gap-1">
+              Documents
+              {pendingDocuments.filter(d => d.verification_status === 'pending').length > 0 && (
+                <Badge variant="secondary" className="ml-1 h-5 px-1.5 text-xs">
+                  {pendingDocuments.filter(d => d.verification_status === 'pending').length}
+                </Badge>
+              )}
+            </TabsTrigger>
             <TabsTrigger value="disputes" className="gap-1">
               Litiges
               {disputes.filter(d => d.status === 'open').length > 0 && (
@@ -344,7 +399,79 @@ const AdminDashboard = () => {
             </Card>
           </TabsContent>
 
-          {/* Users Tab */}
+          {/* Documents Tab */}
+          <TabsContent value="documents">
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <FileCheck className="h-5 w-5" />
+                  Documents des promeneurs ({pendingDocuments.filter(d => d.verification_status === 'pending').length} en attente)
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                {pendingDocuments.length === 0 ? (
+                  <div className="text-center py-12">
+                    <FileCheck className="h-16 w-16 mx-auto mb-4 text-muted-foreground opacity-50" />
+                    <p className="text-muted-foreground">Aucun document soumis</p>
+                  </div>
+                ) : (
+                  <div className="space-y-4">
+                    {pendingDocuments.map((doc: any) => (
+                      <div key={doc.id} className={`p-4 border rounded-lg ${doc.verification_status === 'pending' ? 'border-amber-300 bg-amber-50/50' : ''}`}>
+                        <div className="flex items-start justify-between gap-4">
+                          <div className="flex items-center gap-3 flex-1">
+                            <Avatar>
+                              <AvatarFallback>{doc.profile?.first_name?.[0] || 'P'}{doc.profile?.last_name?.[0] || ''}</AvatarFallback>
+                            </Avatar>
+                            <div className="flex-1">
+                              <p className="font-semibold">{doc.profile?.first_name || ''} {doc.profile?.last_name || ''}</p>
+                              <p className="text-sm text-muted-foreground">{doc.profile?.email}</p>
+                              <div className="flex items-center gap-2 mt-1">
+                                <Badge variant="outline">{doc.document_type}</Badge>
+                                <Badge variant={
+                                  doc.verification_status === 'approved' ? 'default' :
+                                  doc.verification_status === 'rejected' ? 'destructive' : 'secondary'
+                                }>
+                                  {doc.verification_status === 'approved' ? 'Approuvé' :
+                                   doc.verification_status === 'rejected' ? 'Refusé' : 'En attente'}
+                                </Badge>
+                              </div>
+                              {doc.rejection_reason && (
+                                <p className="text-xs text-destructive mt-1">Motif : {doc.rejection_reason}</p>
+                              )}
+                              <p className="text-xs text-muted-foreground mt-1">
+                                Soumis le {doc.submitted_at ? new Date(doc.submitted_at).toLocaleDateString('fr-FR') : 'N/A'}
+                              </p>
+                            </div>
+                          </div>
+                          <div className="flex gap-2 items-center">
+                            {doc.file_url && (
+                              <Button size="sm" variant="outline" asChild>
+                                <a href={doc.file_url} target="_blank" rel="noopener noreferrer">
+                                  <Eye className="h-4 w-4 mr-1" />Voir
+                                </a>
+                              </Button>
+                            )}
+                            {doc.verification_status === 'pending' && (
+                              <>
+                                <Button size="sm" onClick={() => handleVerifyDocument(doc.id, 'approved')}>
+                                  <CheckCircle className="h-4 w-4 mr-1" />Approuver
+                                </Button>
+                                <Button size="sm" variant="destructive" onClick={() => handleVerifyDocument(doc.id, 'rejected')}>
+                                  <XCircle className="h-4 w-4 mr-1" />Refuser
+                                </Button>
+                              </>
+                            )}
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+          </TabsContent>
+
           <TabsContent value="users">
             <Card>
               <CardHeader>

@@ -5,6 +5,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route, useLocation, Navigate } from "react-router-dom";
 import { HelmetProvider } from "react-helmet-async";
 import { useEffect, lazy, Suspense } from "react";
+import ProtectedRoute from "@/components/auth/ProtectedRoute";
 import { InstallPrompt } from "@/components/pwa/InstallPrompt";
 import { PushNotificationPrompt } from "@/components/notifications/PushNotificationPrompt";
 import { AuthProvider } from "@/contexts/AuthContext";
@@ -88,17 +89,18 @@ const App = () => (
               <Route path="/auth" element={<Auth />} />
               <Route path="/auth/callback" element={<AuthCallback />} />
               {/* Owner Dashboard */}
-              <Route path="/dashboard" element={<OwnerDashboard />} />
-              <Route path="/dashboard-proprietaire" element={<OwnerDashboard />} />
-              <Route path="/mon-espace" element={<OwnerDashboard />} />
+              <Route path="/dashboard" element={<ProtectedRoute requiredRole="owner"><OwnerDashboard /></ProtectedRoute>} />
+              <Route path="/dashboard-proprietaire" element={<ProtectedRoute requiredRole="owner"><OwnerDashboard /></ProtectedRoute>} />
+              <Route path="/mon-espace" element={<ProtectedRoute requiredRole="owner"><OwnerDashboard /></ProtectedRoute>} />
               <Route path="/dogs/add" element={<Navigate to="/dashboard?tab=chiens" replace />} />
               <Route path="/bookings" element={<Navigate to="/dashboard?tab=reservations" replace />} />
               <Route path="/referral" element={<Navigate to="/dashboard?tab=parrainage" replace />} />
               <Route path="/profile" element={<Navigate to="/dashboard?tab=profil" replace />} />
               {/* Walker Dashboard */}
-              <Route path="/walker/dashboard" element={<WalkerDashboardPage />} />
-              <Route path="/dashboard-promeneur" element={<WalkerDashboardPage />} />
-              <Route path="/espace-promeneur" element={<WalkerDashboardPage />} />
+              <Route path="/walker/dashboard" element={<ProtectedRoute requiredRole="walker"><WalkerDashboardPage /></ProtectedRoute>} />
+              <Route path="/dashboard-promeneur" element={<ProtectedRoute requiredRole="walker"><WalkerDashboardPage /></ProtectedRoute>} />
+              <Route path="/espace-promeneur" element={<ProtectedRoute requiredRole="walker"><WalkerDashboardPage /></ProtectedRoute>} />
+              <Route path="/walker/earnings" element={<Navigate to="/walker/dashboard?tab=gains" replace />} />
               <Route path="/walker/earnings" element={<Navigate to="/walker/dashboard?tab=gains" replace />} />
               {/* Standalone pages */}
               <Route path="/walkers" element={<FindWalkers />} />
