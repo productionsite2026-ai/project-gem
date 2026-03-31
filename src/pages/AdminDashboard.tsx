@@ -215,6 +215,36 @@ const AdminDashboard = () => {
     }
   };
 
+  const handleVerifyDocument = async (docId: string, status: 'approved' | 'rejected', reason?: string) => {
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) return;
+      const { error } = await supabase.from('walker_documents').update({
+        verification_status: status,
+        verified_by: session.user.id,
+        verified_at: new Date().toISOString(),
+        rejection_reason: status === 'rejected' ? (reason || 'Document non conforme') : null,
+      }).eq('id', docId);
+      if (error) throw error;
+      const doc = pendingDocuments.find((d: any) => d.id === docId);
+      if (doc) {
+        await supabase.from('notifications').insert({
+          user_id: doc.walker_id,
+          title: status === 'approved' ? '✅ Document validé' : '❌ Document refusé',
+          message: status === 'approved'
+            ? `Votre ${doc.document_type} a été vérifié et approuvé.`
+            : `Votre ${doc.document_type} a été refusé : ${reason || 'Non conforme'}. Veuillez le renvoyer.`,
+          type: 'verification',
+          link: '/walker/dashboard?tab=profil',
+        });
+      }
+      toast({ title: status === 'approved' ? 'Document approuvé' : 'Document refusé', description: 'Le promeneur a été notifié' });
+      fetchAdminStats();
+    } catch (error: any) {
+      toast({ title: "Erreur", description: error.message, variant: "destructive" });
+    }
+  };
+
   const getStatusBadge = (status: string) => {
     const statusMap: Record<string, { label: string; variant: any }> = {
       pending: { label: 'En attente', variant: 'secondary' },
