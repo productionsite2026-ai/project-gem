@@ -129,7 +129,21 @@ const AdminDashboard = () => {
         .order('reported_at', { ascending: false });
       setIncidents(incidentsData || []);
 
-      setStats({
+      // Fetch pending walker documents with profile info
+      const { data: docsData } = await supabase
+        .from('walker_documents')
+        .select('*')
+        .order('submitted_at', { ascending: false });
+      
+      if (docsData && docsData.length > 0) {
+        const walkerIds = [...new Set(docsData.map(d => d.walker_id))];
+        const { data: docProfiles } = await supabase.from('profiles').select('id, first_name, last_name, email').in('id', walkerIds);
+        const profileMap = new Map(docProfiles?.map(p => [p.id, p]) || []);
+        setPendingDocuments(docsData.map(d => ({ ...d, profile: profileMap.get(d.walker_id) || null })));
+      } else {
+        setPendingDocuments([]);
+      }
+
         totalUsers: profilesData?.length || 0,
         totalOwners: owners,
         totalWalkers: walkers,
