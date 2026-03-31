@@ -31,22 +31,30 @@ const FavoritesTab = () => {
         .eq("user_id", user.id);
       if (!data || data.length === 0) return [];
       const walkerIds = data.map((f: any) => f.walker_id);
-      const { data: profiles } = await supabase
+      const { data: walkerProfiles } = await supabase
         .from("walker_profiles")
-        .select("*, profiles:user_id(first_name, last_name, avatar_url, city)")
+        .select("*")
         .in("user_id", walkerIds);
-      return (profiles || []).map((p: any) => ({
-        id: p.user_id,
-        name: `${p.profiles?.first_name || "Promeneur"} ${(p.profiles?.last_name || "")[0] || ""}.`,
-        rating: Number(p.rating || 0),
-        reviews: p.total_reviews || 0,
-        avatar: p.profiles?.avatar_url,
-        city: p.profiles?.city || "",
-        price: p.hourly_rate || 15,
-        verified: p.verified || false,
-        services: p.services || [],
-        experience: p.experience_years || 0,
-      }));
+      const wpUserIds = (walkerProfiles || []).map((p: any) => p.user_id);
+      const { data: profilesData } = wpUserIds.length > 0
+        ? await supabase.from("profiles").select("id, first_name, last_name, avatar_url, city").in("id", wpUserIds)
+        : { data: [] };
+      const profileMap = new Map((profilesData || []).map((p: any) => [p.id, p]));
+      return (walkerProfiles || []).map((p: any) => {
+        const prof = profileMap.get(p.user_id);
+        return {
+          id: p.user_id,
+          name: `${prof?.first_name || "Promeneur"} ${(prof?.last_name || "")[0] || ""}.`,
+          rating: Number(p.rating || 0),
+          reviews: p.total_reviews || 0,
+          avatar: prof?.avatar_url,
+          city: prof?.city || "",
+          price: p.hourly_rate || 15,
+          verified: p.verified || false,
+          services: p.services || [],
+          experience: p.experience_years || 0,
+        };
+      });
     },
     enabled: !!user,
   });
