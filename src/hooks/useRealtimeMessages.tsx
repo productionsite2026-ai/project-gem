@@ -56,6 +56,8 @@ export const useRealtimeMessages = (selectedPartnerId?: string | null) => {
       const { data: { session } } = await supabase.auth.getSession();
       if (session) {
         setCurrentUserId(session.user.id);
+      } else {
+        setLoading(false);
       }
     };
     initSession();
