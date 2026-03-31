@@ -144,6 +144,7 @@ const AdminDashboard = () => {
         setPendingDocuments([]);
       }
 
+      setStats({
         totalUsers: profilesData?.length || 0,
         totalOwners: owners,
         totalWalkers: walkers,
