@@ -313,8 +313,16 @@ const AdminDashboard = () => {
 
         {/* Tabs */}
         <Tabs defaultValue="bookings" className="space-y-6">
-          <TabsList className="grid w-full grid-cols-4">
+          <TabsList className="grid w-full grid-cols-5">
             <TabsTrigger value="bookings">Réservations</TabsTrigger>
+            <TabsTrigger value="documents" className="gap-1">
+              Documents
+              {pendingDocuments.filter(d => d.verification_status === 'pending').length > 0 && (
+                <Badge variant="secondary" className="ml-1 h-5 px-1.5 text-xs">
+                  {pendingDocuments.filter(d => d.verification_status === 'pending').length}
+                </Badge>
+              )}
+            </TabsTrigger>
             <TabsTrigger value="disputes" className="gap-1">
               Litiges
               {disputes.filter(d => d.status === 'open').length > 0 && (
