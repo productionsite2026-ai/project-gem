@@ -8,8 +8,9 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { 
   Users, Dog, Calendar, Euro, Shield, Scale, AlertTriangle,
-  BarChart3, Activity, CheckCircle, XCircle, Clock
+  BarChart3, Activity, CheckCircle, XCircle, Clock, FileCheck, FileX, Eye
 } from 'lucide-react';
+import { Input } from "@/components/ui/input";
 import { supabase } from "@/integrations/supabase/client";
 import { useNavigate } from "react-router-dom";
 import { toast } from "@/hooks/use-toast";
