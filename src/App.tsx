@@ -5,6 +5,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route, useLocation, Navigate } from "react-router-dom";
 import { HelmetProvider } from "react-helmet-async";
 import { useEffect, lazy, Suspense } from "react";
+import ProtectedRoute from "@/components/auth/ProtectedRoute";
 import { InstallPrompt } from "@/components/pwa/InstallPrompt";
 import { PushNotificationPrompt } from "@/components/notifications/PushNotificationPrompt";
 import { AuthProvider } from "@/contexts/AuthContext";
