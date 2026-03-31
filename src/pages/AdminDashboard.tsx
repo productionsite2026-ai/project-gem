@@ -35,6 +35,7 @@ const AdminDashboard = () => {
   const [recentUsers, setRecentUsers] = useState<any[]>([]);
   const [disputes, setDisputes] = useState<any[]>([]);
   const [incidents, setIncidents] = useState<any[]>([]);
+  const [pendingDocuments, setPendingDocuments] = useState<any[]>([]);
 
   useEffect(() => {
     checkAuth();
