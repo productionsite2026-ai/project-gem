@@ -125,26 +125,44 @@ const BookWalk = () => {
     }
 
     try {
-      const { error } = await supabase.from('bookings').insert({
+      const price = calculatePrice(data);
+      const { data: bookingData, error } = await supabase.from('bookings').insert({
         owner_id: userId,
         walker_id: walkerId,
         dog_id: data.dogId,
         scheduled_date: data.date,
         scheduled_time: data.time,
         duration_minutes: data.duration,
-        price: calculatePrice(data),
+        price,
         notes: data.notes || null,
         address: data.address || null,
         service_type: data.service,
-      });
+      }).select('id').single();
 
       if (error) throw error;
+
+      // Get dog name for notification
+      const { data: dogData } = await supabase.from('dogs').select('name').eq('id', data.dogId).single();
+      const dogName = dogData?.name || 'votre chien';
+
+      // Get owner name
+      const { data: ownerProfile } = await supabase.from('profiles').select('first_name').eq('id', userId).single();
+      const ownerName = ownerProfile?.first_name || 'Un propriétaire';
+
+      // Notify the walker
+      await supabase.from('notifications').insert({
+        user_id: walkerId!,
+        title: '📩 Nouvelle demande de réservation',
+        message: `${ownerName} souhaite une ${data.service} pour ${dogName} le ${new Date(data.date).toLocaleDateString('fr-FR')} à ${data.time} (${price}€)`,
+        type: 'booking',
+        link: `/walker/dashboard?tab=missions`,
+      });
 
       toast({
         title: "Réservation effectuée !",
         description: "Votre demande a été envoyée. Le promeneur va confirmer.",
       });
-      navigate('/bookings');
+      navigate('/dashboard?tab=reservations');
     } catch (error: any) {
       toast({ title: "Erreur", description: error.message, variant: "destructive" });
     }
