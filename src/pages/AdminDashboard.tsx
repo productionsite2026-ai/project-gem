@@ -399,7 +399,79 @@ const AdminDashboard = () => {
             </Card>
           </TabsContent>
 
-          {/* Users Tab */}
+          {/* Documents Tab */}
+          <TabsContent value="documents">
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <FileCheck className="h-5 w-5" />
+                  Documents des promeneurs ({pendingDocuments.filter(d => d.verification_status === 'pending').length} en attente)
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                {pendingDocuments.length === 0 ? (
+                  <div className="text-center py-12">
+                    <FileCheck className="h-16 w-16 mx-auto mb-4 text-muted-foreground opacity-50" />
+                    <p className="text-muted-foreground">Aucun document soumis</p>
+                  </div>
+                ) : (
+                  <div className="space-y-4">
+                    {pendingDocuments.map((doc: any) => (
+                      <div key={doc.id} className={`p-4 border rounded-lg ${doc.verification_status === 'pending' ? 'border-amber-300 bg-amber-50/50' : ''}`}>
+                        <div className="flex items-start justify-between gap-4">
+                          <div className="flex items-center gap-3 flex-1">
+                            <Avatar>
+                              <AvatarFallback>{doc.profile?.first_name?.[0] || 'P'}{doc.profile?.last_name?.[0] || ''}</AvatarFallback>
+                            </Avatar>
+                            <div className="flex-1">
+                              <p className="font-semibold">{doc.profile?.first_name || ''} {doc.profile?.last_name || ''}</p>
+                              <p className="text-sm text-muted-foreground">{doc.profile?.email}</p>
+                              <div className="flex items-center gap-2 mt-1">
+                                <Badge variant="outline">{doc.document_type}</Badge>
+                                <Badge variant={
+                                  doc.verification_status === 'approved' ? 'default' :
+                                  doc.verification_status === 'rejected' ? 'destructive' : 'secondary'
+                                }>
+                                  {doc.verification_status === 'approved' ? 'Approuvé' :
+                                   doc.verification_status === 'rejected' ? 'Refusé' : 'En attente'}
+                                </Badge>
+                              </div>
+                              {doc.rejection_reason && (
+                                <p className="text-xs text-destructive mt-1">Motif : {doc.rejection_reason}</p>
+                              )}
+                              <p className="text-xs text-muted-foreground mt-1">
+                                Soumis le {doc.submitted_at ? new Date(doc.submitted_at).toLocaleDateString('fr-FR') : 'N/A'}
+                              </p>
+                            </div>
+                          </div>
+                          <div className="flex gap-2 items-center">
+                            {doc.file_url && (
+                              <Button size="sm" variant="outline" asChild>
+                                <a href={doc.file_url} target="_blank" rel="noopener noreferrer">
+                                  <Eye className="h-4 w-4 mr-1" />Voir
+                                </a>
+                              </Button>
+                            )}
+                            {doc.verification_status === 'pending' && (
+                              <>
+                                <Button size="sm" onClick={() => handleVerifyDocument(doc.id, 'approved')}>
+                                  <CheckCircle className="h-4 w-4 mr-1" />Approuver
+                                </Button>
+                                <Button size="sm" variant="destructive" onClick={() => handleVerifyDocument(doc.id, 'rejected')}>
+                                  <XCircle className="h-4 w-4 mr-1" />Refuser
+                                </Button>
+                              </>
+                            )}
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+          </TabsContent>
+
           <TabsContent value="users">
             <Card>
               <CardHeader>
