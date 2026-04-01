@@ -171,12 +171,6 @@ const ProfileTab = ({ profile }: ProfileTabProps) => {
                 </div>
                 <Button onClick={handleSaveProfile} disabled={loading} className="w-full">
                   {loading ? "Enregistrement..." : "Enregistrer les modifications"}
-                </Button>
-                  />
-                </div>
-                <Button onClick={handleSaveProfile} disabled={loading} className="w-full">
-                  {loading ? "Enregistrement..." : "Enregistrer les modifications"}
-                </Button>
               </CardContent>
             </Card>
 
