@@ -166,7 +166,31 @@ const WalkerProfileTab = ({ profile, walkerProfile }: ProfileTabProps) => {
                   />
                 </div>
                 <div className="space-y-2">
-                  <Label>Ville</Label>
+                  <Label>Adresse</Label>
+                  <Input 
+                    value={profileData.address}
+                    onChange={(e) => setProfileData({...profileData, address: e.target.value})}
+                    placeholder="12 rue de la Paix"
+                  />
+                </div>
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label>Code postal</Label>
+                    <Input 
+                      value={profileData.postal_code}
+                      onChange={(e) => setProfileData({...profileData, postal_code: e.target.value})}
+                      placeholder="75001"
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label>Ville</Label>
+                    <Input 
+                      value={profileData.city}
+                      onChange={(e) => setProfileData({...profileData, city: e.target.value})}
+                      placeholder="Paris..."
+                    />
+                  </div>
+                </div>
                   <Input 
                     value={profileData.city}
                     onChange={(e) => setProfileData({...profileData, city: e.target.value})}
