@@ -31,6 +31,8 @@ const WalkerProfileTab = ({ profile, walkerProfile }: ProfileTabProps) => {
     last_name: profile?.last_name || '',
     phone: profile?.phone || '',
     city: profile?.city || '',
+    address: profile?.address || '',
+    postal_code: profile?.postal_code || '',
     bio: profile?.bio || ''
   });
 
@@ -50,6 +52,8 @@ const WalkerProfileTab = ({ profile, walkerProfile }: ProfileTabProps) => {
           last_name: profileData.last_name,
           phone: profileData.phone,
           city: profileData.city,
+          address: profileData.address,
+          postal_code: profileData.postal_code,
           bio: profileData.bio,
           updated_at: new Date().toISOString()
         })
@@ -162,12 +166,30 @@ const WalkerProfileTab = ({ profile, walkerProfile }: ProfileTabProps) => {
                   />
                 </div>
                 <div className="space-y-2">
-                  <Label>Ville</Label>
+                  <Label>Adresse</Label>
                   <Input 
-                    value={profileData.city}
-                    onChange={(e) => setProfileData({...profileData, city: e.target.value})}
-                    placeholder="Paris, Lyon, Marseille..."
+                    value={profileData.address}
+                    onChange={(e) => setProfileData({...profileData, address: e.target.value})}
+                    placeholder="12 rue de la Paix"
                   />
+                </div>
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label>Code postal</Label>
+                    <Input 
+                      value={profileData.postal_code}
+                      onChange={(e) => setProfileData({...profileData, postal_code: e.target.value})}
+                      placeholder="75001"
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label>Ville</Label>
+                    <Input 
+                      value={profileData.city}
+                      onChange={(e) => setProfileData({...profileData, city: e.target.value})}
+                      placeholder="Paris..."
+                    />
+                  </div>
                 </div>
                 <Button onClick={handleSaveProfile} disabled={loading} className="w-full">
                   {loading ? "Enregistrement..." : "Enregistrer"}
