@@ -191,12 +191,6 @@ const WalkerProfileTab = ({ profile, walkerProfile }: ProfileTabProps) => {
                     />
                   </div>
                 </div>
-                  <Input 
-                    value={profileData.city}
-                    onChange={(e) => setProfileData({...profileData, city: e.target.value})}
-                    placeholder="Paris, Lyon, Marseille..."
-                  />
-                </div>
                 <Button onClick={handleSaveProfile} disabled={loading} className="w-full">
                   {loading ? "Enregistrement..." : "Enregistrer"}
                 </Button>
