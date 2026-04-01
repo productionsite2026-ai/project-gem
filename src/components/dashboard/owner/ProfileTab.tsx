@@ -25,6 +25,8 @@ const ProfileTab = ({ profile }: ProfileTabProps) => {
     last_name: profile?.last_name || '',
     phone: profile?.phone || '',
     city: profile?.city || '',
+    address: profile?.address || '',
+    postal_code: profile?.postal_code || '',
     bio: profile?.bio || ''
   });
   
