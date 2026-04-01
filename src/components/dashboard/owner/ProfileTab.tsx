@@ -165,7 +165,13 @@ const ProfileTab = ({ profile }: ProfileTabProps) => {
                   <Input 
                     value={profileData.city}
                     onChange={(e) => setProfileData({...profileData, city: e.target.value})}
-                    placeholder="Paris, Lyon, Marseille..."
+                    placeholder="Paris..."
+                  />
+                  </div>
+                </div>
+                <Button onClick={handleSaveProfile} disabled={loading} className="w-full">
+                  {loading ? "Enregistrement..." : "Enregistrer les modifications"}
+                </Button>
                   />
                 </div>
                 <Button onClick={handleSaveProfile} disabled={loading} className="w-full">
