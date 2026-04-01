@@ -52,6 +52,8 @@ const WalkerProfileTab = ({ profile, walkerProfile }: ProfileTabProps) => {
           last_name: profileData.last_name,
           phone: profileData.phone,
           city: profileData.city,
+          address: profileData.address,
+          postal_code: profileData.postal_code,
           bio: profileData.bio,
           updated_at: new Date().toISOString()
         })
